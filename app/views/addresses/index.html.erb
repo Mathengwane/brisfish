@@ -1,65 +1,62 @@
 <% content_for :javascripts do %>
-	<script type="text/javascript"> 
+	<script type="text/javascript">
+
+			$(document).ready(function(){
+					setInterval(addToPage(),5000);
+					function addToPage(){
+						$.ajax({
+								url: "/addresses",
+								type: "GET",
+								dataType: "json",
+								success:function(url){ 
+								var i = 0;
+									for(i;i<url.length;i++){
+										$("#url_list").prepend("<li>" + url[i].url + "</li>");
+									}
+								}
+										
+						});
+					}
+			}); 
 	
 			$('form').submit(function(){
-				stopPropagation();
-				preventDefault();
 
 				var address,fancy_url;
 
 				if ($("#address_url")){
-
 					address = $("#address_url").val();
-
 					if(address.match( /^(((ht|f)tp(s?):\/\/)|(www\.[^ \[\]\(\)\n\r\t]+)|(([012]?[0-9]{1,2}\.){3}[012]?[0-9]{1,2})\/)([^ \[\]\(\),;&quot;'&lt;&gt;\n\r\t]+)([^\. \[\]\(\),;&quot;'&lt;&gt;\n\r\t])|(([012]?[0-9]{1,2}\.){3}[012]?[0-9]{1,2})/  )){
 	 
-						fancy_url = address.replace("http://","");
-						fancy_url = fancy_url.replace("www.","");
-
+						f_url = address.replace("http://","");
+						f_url = f_url.replace("www.","");
+						fancy_url = f_url.split('/')[0]
 						$("#url_list").prepend("<li>"+ fancy_url + "</li>");
 						$("#address_url").val(" ");
 
-					}else if (address.match( /^(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?/ )) {
-						fancy_url = address.replace("http://","");
-						$("#url_list").prepend("<li>"+ fancy_url + "</li>");
-						$("#address_url").val(" ");
+					}else{ 
 
-					}else { }
+						if (address.match( /^(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?/ )) {
+								f_url = address.replace("http://","");
+								fancy_url = f_url.split('/')[0]
+								$("#url_list").prepend("<li>"+ fancy_url + "</li>");
+								$("#address_url").val(" ");
+							}
+					}
 
-					setInterval(post(),5000);
-					setInterval(addToPage(),5000)
+					$.ajax({
+							url: "/addresses",
+							type: "POST",
+							data: { url : fancy_url },
+							dataType: "json",
+							success:function(xhr,textStatus){ console.log(textStatus);}
+
+					});
+					
 					return false
 
 				}
 
-				function post(){
-					console.log("++updating++");
-					$.ajax({
-									url: "/addresses",
-									type: "POST",
-									data: { url : fancy_url },
-									cache: false,
-									dataType: "json",
-									success:function(xhr,textStatus){ console.log(textStatus);}
-
-								});
-
-				}
-
-				function addToPage(){
-					$.ajax({
-									url: "/addresses",
-									type: "GET",
-									dataType: "script",
-									success:function(data){ console.log(data);}
-
-								});
-				}
-
-
 			});
-
-		
 
 	</script>
 <% end %>
@@ -70,7 +67,7 @@
 	<%=text_field(:address, :url , :class => "address" )%>
 <%end%>
 <ul>
-		<div id="url_list"><%#= render :partial => "urls", :locals => {:url => @address} %></div>
+		<div id="url_list"></div>
 </ul>
 </div>
 
